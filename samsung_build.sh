@@ -15,5 +15,8 @@ else
 fi
 
 cd "${RDIR}/kernel_platform"
+
 build/_setup_env.sh
-LTO=thin BUILD_CONFIG=msm-kernel/build.config.msm.m269.sec build/build.sh
+BUILD_CONFIG=msm-kernel/build.config.msm.m269.sec build/config.sh
+read -p "Edit your .config file and press enter to continue..."
+LTO=thin build/build.sh
