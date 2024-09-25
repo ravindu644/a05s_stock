@@ -14,6 +14,17 @@ else
     echo -e "[+] Toolchain already installed...\n"    
 fi
 
+#OEM Variables
+export TARGET_BUILD_VARIANT="user"
+export CHIPSET_NAME="sm6225"
+export MODEL="a05s"
+export ANDROID_BUILD_TOP="$(pwd)"
+export TARGET_PRODUCT=gki
+export TARGET_BOARD_PLATFORM=gki
+
+export ANDROID_PRODUCT_OUT=${ANDROID_BUILD_TOP}/out/target/product/${MODEL}
+export OUT_DIR=${ANDROID_BUILD_TOP}/out/msm-${CHIPSET_NAME}-${CHIPSET_NAME}-${TARGET_PRODUCT}
+
 cd "${RDIR}/kernel_platform"
 
 #kernel_platform/out/msm-kernel-m269-consolidate/gki_kernel/common/.config is the path for final config
