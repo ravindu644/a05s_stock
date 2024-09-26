@@ -1,33 +1,57 @@
 #!/bin/bash
-export RDIR="$(pwd)"
 
-if [ ! -d "${RDIR}/kernel_platform/prebuilts" ]; then
+# Create a log file and print start time
+echo "Build started at: $(date)" | tee logs.txt
+
+# OEM Variables
+export ANDROID_BUILD_TOP="$(pwd)"
+export TARGET_BUILD_VARIANT="user"
+export CHIPSET_NAME="sm6225"
+export MODEL="a05s"
+export TARGET_PRODUCT=gki
+export TARGET_BOARD_PLATFORM=gki
+
+# Build paths
+export ANDROID_PRODUCT_OUT=${ANDROID_BUILD_TOP}/out/target/product/${MODEL}
+export OUT_DIR=${ANDROID_BUILD_TOP}/out/msm-${CHIPSET_NAME}-${CHIPSET_NAME}-${TARGET_PRODUCT}
+
+# For Lcd (techpack) driver build
+export KBUILD_EXTRA_SYMBOLS="${ANDROID_BUILD_TOP}/out/vendor/qcom/opensource/mmrm-driver/Module.symvers \
+		${ANDROID_BUILD_TOP}/out/vendor/qcom/opensource/mm-drivers/hw_fence/Module.symvers \
+		${ANDROID_BUILD_TOP}/out/vendor/qcom/opensource/mm-drivers/sync_fence/Module.symvers \
+		${ANDROID_BUILD_TOP}/out/vendor/qcom/opensource/mm-drivers/msm_ext_display/Module.symvers \
+		${ANDROID_BUILD_TOP}/out/vendor/qcom/opensource/securemsm-kernel/Module.symvers \
+"
+
+# For Audio (techpack) driver build
+export MODNAME=audio_dlkm
+
+export KBUILD_EXT_MODULES="../vendor/qcom/opensource/mm-drivers/msm_ext_display \
+  ../vendor/qcom/opensource/mm-drivers/sync_fence \
+  ../vendor/qcom/opensource/mm-drivers/hw_fence \
+  ../vendor/qcom/opensource/mmrm-driver \
+  ../vendor/qcom/opensource/securemsm-kernel \
+  ../vendor/qcom/opensource/display-drivers/msm \
+  ../vendor/qcom/opensource/audio-kernel \
+  ../vendor/qcom/opensource/camera-kernel \
+  "
+
+# Downloading Toolchain
+if [ ! -d "${ANDROID_BUILD_TOP}/kernel_platform/prebuilts" ]; then
     echo -e "[+] Downloading Toolchain...\n"
     curl -LO --progress-bar https://github.com/ravindu644/a05s_stock/releases/download/toolchain/toolchain.zip
     curl -LO --progress-bar https://github.com/ravindu644/a05s_stock/releases/download/toolchain/toolchain.z01
     zip -s- toolchain.zip -O combined.zip && unzip combined.zip && rm combined.zip
     tar -xvf toolchain.tar.gz
-    mv prebuilts "${RDIR}/kernel_platform" && chmod +x -R "${RDIR}/kernel_platform/prebuilts"
+    mv prebuilts "${ANDROID_BUILD_TOP}/kernel_platform" && chmod +x -R "${ANDROID_BUILD_TOP}/kernel_platform/prebuilts"
     rm toolchain*
     sudo apt install rsync > /dev/null 2>&1
 else
-    echo -e "[+] Toolchain already installed...\n"    
+    echo -e "[+] Toolchain already installed...\n"  
 fi
 
-#OEM Variables
-export TARGET_BUILD_VARIANT="user"
-export CHIPSET_NAME="sm6225"
-export MODEL="a05s"
-export ANDROID_BUILD_TOP="$(pwd)"
-export TARGET_PRODUCT=gki
-export TARGET_BOARD_PLATFORM=gki
+#main execution
+export SKIP_MRPROPER=1
+RECOMPILE_KERNEL=1 kernel_platform/build/android/prepare_vendor.sh sec ${TARGET_PRODUCT} | tee -a logs.txt
 
-export ANDROID_PRODUCT_OUT=${ANDROID_BUILD_TOP}/out/target/product/${MODEL}
-export OUT_DIR=${ANDROID_BUILD_TOP}/out/msm-${CHIPSET_NAME}-${CHIPSET_NAME}-${TARGET_PRODUCT}
-
-cd "${RDIR}/kernel_platform"
-
-#kernel_platform/out/msm-kernel-m269-consolidate/gki_kernel/common/.config is the path for final config
-#HERMETIC_TOOLCHAIN=0 is required for menuconfig to load external libraries
-HERMETIC_TOOLCHAIN=0 BUILD_CONFIG=msm-kernel/build.config.msm.m269.sec LTO=thin build/config.sh
-HERMETIC_TOOLCHAIN=0 BUILD_CONFIG=msm-kernel/build.config.msm.m269.sec LTO=thin build/build.sh
+echo "[+] Build finished at: $(date)" | tee -a logs.txt
