@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Check if the script is running with sudo
+if [ "$EUID" -ne 0 ]; then
+    echo "[+] Script is not running with sudo, trying to acquire sudo permissions..."
+    exec sudo "$0" "$@"
+fi
+
 # Create a log file and print start time
 echo "Build started at: $(date)" | tee logs.txt
 
