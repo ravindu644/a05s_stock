@@ -16,6 +16,7 @@ export CHIPSET_NAME="sm6225"
 export MODEL="a05s"
 export TARGET_PRODUCT=gki
 export TARGET_BOARD_PLATFORM=gki
+export MERGE_CONFIG="${ANDROID_BUILD_TOP}/kernel_platform/msm-kernel/scripts/kconfig/merge_config.sh"
 
 # Build paths
 export ANDROID_PRODUCT_OUT=${ANDROID_BUILD_TOP}/out/target/product/${MODEL}

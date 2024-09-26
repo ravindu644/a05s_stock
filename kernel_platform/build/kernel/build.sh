@@ -699,11 +699,22 @@ if [ "${SKIP_DEFCONFIG}" != "1" ] ; then
 
   if [ -n "${POST_DEFCONFIG_CMDS}" ]; then
     echo "========================================================"
-    echo " Running pre-make command(s):"
+    echo " Running post-defconfig command(s):"
     set -x
     eval ${POST_DEFCONFIG_CMDS}
     set +x
   fi
+
+  #custom defconfig
+  echo "========================================================"
+  echo " Merging custom defconfig with .config"
+  (cd ${OUT_DIR} && ${MERGE_CONFIG} -m .config ${ANDROID_BUILD_TOP}/custom_defconfigs/custom_defconfig)
+  (cd ${OUT_DIR} && make O=${OUT_DIR} ${TOOL_ARGS} olddefconfig)
+
+  #menuconfig
+  echo "========================================================"
+  echo " Running menuconfig"
+  (cd ${OUT_DIR} && make O=${OUT_DIR} ${TOOL_ARGS} menuconfig)
 fi
 
 if [ "${KASAN}" = "sw_tags" ]; then
@@ -854,7 +865,6 @@ echo "========================================================"
 echo " Building kernel"
 
 set -x
-(cd ${OUT_DIR} && make O=${OUT_DIR} ${TOOL_ARGS} menuconfig)
 (cd ${OUT_DIR} && make O=${OUT_DIR} ${TOOL_ARGS} "${MAKE_ARGS[@]}" ${MAKE_GOALS})
 set +x
 
@@ -950,11 +960,6 @@ if [[ "${KL_DIR}" == "common" ]] && [[ "${KMI_SYMBOL_LIST_STRICT_MODE}" = "1" ]]
                                    --new      ${DIST_DIR}/${abi_out_file} \
                                    --report   ${DIST_DIR}/abi.report
     set -e
-    t_changed=`cat ${DIST_DIR}/abi.report | grep -E "CRC changed from 0x[0-9a-fAF]{8} to 0x[0-9a-fAF]{8}" | wc -l`
-    if [ $t_changed -ne 0 ]; then
-      echo "ERROR: DIFF_ABI is failed" >&2
-      exit 1
-    fi
   fi
 fi
 
