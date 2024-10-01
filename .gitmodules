@@ -1,3 +1,7 @@
 [submodule "kernel_platform/KernelSU"]
 	path = kernel_platform/KernelSU
 	url = https://github.com/tiann/KernelSU.git
+
+[submodule "kernel_platform/common"]
+	path = kernel_platform/common
+	url = https://github.com/ravindu644/a05s_common.git
